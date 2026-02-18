@@ -72,11 +72,11 @@ func (v *OIDCValidator) Validate(ctx context.Context, token string) error {
 		return errors.New("token claims validation failed: issuer mismatch")
 	}
 
-	if hasRequiredScope(parsedToken, v.scope) {
-		return nil
+	if !hasRequiredScope(parsedToken, v.scope) {
+		return fmt.Errorf("%w: required scope %q missing", ErrForbidden, v.scope)
 	}
 
-	return fmt.Errorf("%w: required scope %q missing", ErrForbidden, v.scope)
+	return nil
 }
 
 func hasRequiredScope(token jwt.Token, required string) bool {

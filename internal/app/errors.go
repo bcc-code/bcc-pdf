@@ -17,7 +17,11 @@ func (e *AppError) Error() string {
 	if e == nil {
 		return ""
 	}
-	return e.Message
+	msg := e.Message
+	if e.Cause != nil {
+		msg += ": " + e.Cause.Error()
+	}
+	return msg
 }
 
 func (e *AppError) Unwrap() error {
