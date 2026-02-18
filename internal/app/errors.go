@@ -1,8 +1,8 @@
 package app
 
 import (
+	"context"
 	"errors"
-	"fmt"
 	"log/slog"
 	"net/http"
 )
@@ -51,39 +51,27 @@ func NewInternalError(message string, cause error) error {
 	return &AppError{StatusCode: http.StatusInternalServerError, Message: message, Cause: cause}
 }
 
-func writeHTTPError(logger *slog.Logger, w http.ResponseWriter, r *http.Request, err error) {
-	var appErr *AppError
-
-	var attributes []any
-
-	if r != nil {
-		attributes = append(attributes,
-			"method", r.Method,
-			"path", r.URL.Path,
-			"remote_addr", r.RemoteAddr,
-		)
+func writeHTTPError(ctx context.Context, logger *slog.Logger, w http.ResponseWriter, r *http.Request, err error) {
+	attributes := []any{
+		"method", r.Method,
+		"path", r.URL.Path,
+		"remote_addr", r.RemoteAddr,
+		"cause", err,
 	}
 
+	var appErr *AppError
 	if errors.As(err, &appErr) {
 		attributes = append(attributes,
 			"status", appErr.StatusCode,
 			"message", appErr.Message,
 		)
-		if appErr.Cause != nil {
-			attributes = append(attributes, "cause", appErr.Cause.Error())
-		}
-		fmt.Println(attributes...)
-		logger.Error("request failed", attributes...)
+		logger.ErrorContext(ctx, "request failed", attributes...)
 		http.Error(w, appErr.Message, appErr.StatusCode)
 		return
 	}
 
 	attributes = append(attributes, "status", http.StatusInternalServerError)
 
-	if err != nil {
-		attributes = append(attributes, "cause", err.Error())
-	}
-
-	logger.Error("request failed with unexpected error type", attributes...)
+	logger.ErrorContext(ctx, "request failed with unexpected error type", attributes...)
 	http.Error(w, "Failed to process request.", http.StatusInternalServerError)
 }

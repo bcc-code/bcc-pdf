@@ -42,7 +42,7 @@ func main() {
 
 	server := &http.Server{
 		Addr:              ":" + port,
-		Handler:           obs.HttpHandler(otelServiceName, svc.Routes()),
+		Handler:           svc.Routes(),
 		ReadHeaderTimeout: 10 * time.Second,
 		ReadTimeout:       30 * time.Second,
 		WriteTimeout:      defaultRequestTimeout + 15*time.Second,

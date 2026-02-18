@@ -41,8 +41,8 @@ func NewService(validator TokenValidator, runner PDFRunner, config Config, obs O
 
 func (s *Service) Routes() http.Handler {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/healthcheck", s.healthcheck)
-	mux.Handle("/", s.requireAuth(http.HandlerFunc(s.renderPDF)))
+	s.addRoute(mux, "GET /healthcheck", http.HandlerFunc(s.healthcheck))
+	s.addRoute(mux, "POST /", s.requireAuth(http.HandlerFunc(s.renderPDF)))
 	return mux
 }
 
@@ -53,19 +53,21 @@ func (s *Service) healthcheck(w http.ResponseWriter, _ *http.Request) {
 
 func (s *Service) requireAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+
 		token, err := parseBearerToken(r.Header.Get("Authorization"))
 		if err != nil {
-			writeHTTPError(s.obs.Logger(), w, r, NewUnauthorizedError("Unauthorized", err))
+			writeHTTPError(ctx, s.obs.Logger(), w, r, NewUnauthorizedError("Unauthorized", err))
 			return
 		}
 
 		err = s.validator.Validate(r.Context(), token)
 		if err != nil {
 			if errors.Is(err, ErrForbidden) {
-				writeHTTPError(s.obs.Logger(), w, r, NewForbiddenError("Forbidden", err))
+				writeHTTPError(ctx, s.obs.Logger(), w, r, NewForbiddenError("Forbidden", err))
 				return
 			}
-			writeHTTPError(s.obs.Logger(), w, r, NewUnauthorizedError("Unauthorized", err))
+			writeHTTPError(ctx, s.obs.Logger(), w, r, NewUnauthorizedError("Unauthorized", err))
 			return
 		}
 
@@ -74,22 +76,23 @@ func (s *Service) requireAuth(next http.Handler) http.Handler {
 }
 
 func (s *Service) renderPDF(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	if r.Method != http.MethodPost {
-		writeHTTPError(s.obs.Logger(), w, r, NewMethodNotAllowedError("Method not allowed", nil))
+		writeHTTPError(ctx, s.obs.Logger(), w, r, NewMethodNotAllowedError("Method not allowed", nil))
 		return
 	}
 
 	contentType := r.Header.Get("Content-Type")
 	mediaType, _, err := mime.ParseMediaType(contentType)
 	if err != nil || mediaType != "multipart/form-data" {
-		writeHTTPError(s.obs.Logger(), w, r, NewBadRequestError("Multipart request required.", err))
+		writeHTTPError(ctx, s.obs.Logger(), w, r, NewBadRequestError("Multipart request required.", err))
 		return
 	}
 
 	r.Body = http.MaxBytesReader(w, r.Body, s.config.MaxRequestBytes)
 	reader, err := r.MultipartReader()
 	if err != nil {
-		writeHTTPError(s.obs.Logger(), w, r, NewBadRequestError("Multipart request required.", err))
+		writeHTTPError(ctx, s.obs.Logger(), w, r, NewBadRequestError("Multipart request required.", err))
 		return
 	}
 
@@ -98,7 +101,7 @@ func (s *Service) renderPDF(w http.ResponseWriter, r *http.Request) {
 
 	err = s.generatePDFToWriter(r.Context(), reader, w)
 	if err != nil {
-		writeHTTPError(s.obs.Logger(), w, r, err)
+		writeHTTPError(ctx, s.obs.Logger(), w, r, err)
 		return
 	}
 }
@@ -122,4 +125,8 @@ type WeasyprintRunner struct {
 	BwrapPath             string
 	WeasyprintPath        string
 	DefaultStylesheetPath string
+}
+
+func (s *Service) addRoute(mux *http.ServeMux, pattern string, handler http.Handler) {
+	mux.Handle(pattern, s.obs.HttpHandler(pattern, handler))
 }
