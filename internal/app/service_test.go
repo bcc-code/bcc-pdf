@@ -28,7 +28,7 @@ func TestHealthcheckWithoutAuth(t *testing.T) {
 
 func TestRenderPDFUnauthorizedWhenMissingToken(t *testing.T) {
 	svc := newTestService(fakeValidator{}, &fakeRunner{})
-	req := httptest.NewRequest(http.MethodPost, "/", bytes.NewReader([]byte("")))
+	req := httptest.NewRequest(http.MethodPost, "/pdf", bytes.NewReader([]byte("")))
 	req.Header.Set("Content-Type", "multipart/form-data")
 	rec := httptest.NewRecorder()
 
@@ -39,7 +39,7 @@ func TestRenderPDFUnauthorizedWhenMissingToken(t *testing.T) {
 
 func TestRenderPDFForbiddenWhenScopeMissing(t *testing.T) {
 	svc := newTestService(fakeValidator{err: ErrForbidden}, &fakeRunner{})
-	req := httptest.NewRequest(http.MethodPost, "/", bytes.NewReader([]byte("")))
+	req := httptest.NewRequest(http.MethodPost, "/pdf", bytes.NewReader([]byte("")))
 	req.Header.Set("Authorization", "Bearer test-token")
 	req.Header.Set("Content-Type", "multipart/form-data")
 	rec := httptest.NewRecorder()
@@ -51,7 +51,7 @@ func TestRenderPDFForbiddenWhenScopeMissing(t *testing.T) {
 
 func TestRenderPDFBadContentType(t *testing.T) {
 	svc := newTestService(fakeValidator{}, &fakeRunner{})
-	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader("{}"))
+	req := httptest.NewRequest(http.MethodPost, "/pdf", strings.NewReader("{}"))
 	req.Header.Set("Authorization", "Bearer test-token")
 	req.Header.Set("Content-Type", "application/json")
 	rec := httptest.NewRecorder()
@@ -64,7 +64,7 @@ func TestRenderPDFBadContentType(t *testing.T) {
 func TestRenderPDFRequiresHTML(t *testing.T) {
 	svc := newTestService(fakeValidator{}, &fakeRunner{})
 	body, contentType := newMultipartBody(t, map[string]string{"css": "body{color:red;}"}, nil)
-	req := httptest.NewRequest(http.MethodPost, "/", body)
+	req := httptest.NewRequest(http.MethodPost, "/pdf", body)
 	req.Header.Set("Authorization", "Bearer test-token")
 	req.Header.Set("Content-Type", contentType)
 	rec := httptest.NewRecorder()
@@ -88,7 +88,7 @@ func TestRenderPDFSuccess(t *testing.T) {
 		map[string]string{"attachment.test": "notes.txt"},
 	)
 
-	req := httptest.NewRequest(http.MethodPost, "/", body)
+	req := httptest.NewRequest(http.MethodPost, "/pdf", body)
 	req.Header.Set("Authorization", "Bearer test-token")
 	req.Header.Set("Content-Type", contentType)
 	rec := httptest.NewRecorder()
@@ -111,7 +111,7 @@ func TestRenderPDFSupportsFilePrefixAttachments(t *testing.T) {
 		map[string]string{"html": "<html><body>ok</body></html>"},
 		map[string]string{"file.terms": "terms.txt"},
 	)
-	req := httptest.NewRequest(http.MethodPost, "/", body)
+	req := httptest.NewRequest(http.MethodPost, "/pdf", body)
 	req.Header.Set("Authorization", "Bearer test-token")
 	req.Header.Set("Content-Type", contentType)
 	rec := httptest.NewRecorder()
@@ -126,7 +126,7 @@ func TestRenderPDFFailedRunnerReturns500(t *testing.T) {
 	runner := &fakeRunner{runErr: errors.New("boom")}
 	svc := newTestService(fakeValidator{}, runner)
 	body, contentType := newMultipartBody(t, map[string]string{"html": "<html></html>"}, nil)
-	req := httptest.NewRequest(http.MethodPost, "/", body)
+	req := httptest.NewRequest(http.MethodPost, "/pdf", body)
 	req.Header.Set("Authorization", "Bearer test-token")
 	req.Header.Set("Content-Type", contentType)
 	rec := httptest.NewRecorder()
