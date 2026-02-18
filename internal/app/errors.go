@@ -69,7 +69,11 @@ func writeHTTPError(ctx context.Context, logger *slog.Logger, w http.ResponseWri
 			"status", appErr.StatusCode,
 			"message", appErr.Message,
 		)
-		logger.ErrorContext(ctx, "request failed", attributes...)
+		level := slog.LevelError
+		if appErr.StatusCode < 500 {
+			level = slog.LevelWarn
+		}
+		logger.Log(ctx, level, "request failed", attributes...)
 		http.Error(w, appErr.Message, appErr.StatusCode)
 		return
 	}
