@@ -1,46 +1,31 @@
-
 name: Publish Nuget Package
 
 on:
   push:
-    branches: [ master, main ]
+    branches: [master, main]
   pull_request:
-    branches: [ master, main ]
+    branches: [master, main]
 
 env:
   API_KEY: ${{ secrets.NUGET_API_KEY }}
-  
+
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v1
-      with:
-        dotnet-version: 6.0.x
+      - uses: actions/checkout@v2
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 6.0.x
 
-    - name: Set Environment Variables
-      uses: ./.github/actions/setvars
-      with:
-        varFilePath: ./.github/variables/version.env
+      - name: Package
+        working-directory: sdk/dotnet/BccCode.PdfService.Client
+        run: |
+          dotnet pack -p:PackageVersion=1.0.1.${{ github.run_number}} -c Release -o . BccCode.PdfService.Client.csproj
 
-    - name: Set package version
-      run: |
-        if [[ $GITHUB_REF == 'refs/heads/master' && $GITHUB_EVENT_NAME == 'push' ]]; then
-            echo "VERSION=${{ env.VERSION }}.${{ github.run_number}}" >> "$GITHUB_ENV"
-        else
-            echo "VERSION=${{ env.VERSION }}.${{ github.run_number}}-beta" >> "$GITHUB_ENV"
-        fi
-
-    - name: Package
-      working-directory: sdk/dotnet/BccCode.PdfService.Client
-      run:  |
-        dotnet pack -p:PackageVersion=${{ env.VERSION }} -c Release -o . BccCode.PdfService.Client.csproj
-
-    - name: Publish
-      working-directory: sdk/dotnet/BccCode.PdfService.Client
-      run: |
-        dotnet nuget push BccCode.PdfService.Client*.nupkg -k ${{env.API_KEY}} -s https://api.nuget.org/v3/index.json --skip-duplicate
+      - name: Publish
+        working-directory: sdk/dotnet/BccCode.PdfService.Client
+        run: |
+          dotnet nuget push BccCode.PdfService.Client*.nupkg -k ${{env.API_KEY}} -s https://api.nuget.org/v3/index.json --skip-duplicate
