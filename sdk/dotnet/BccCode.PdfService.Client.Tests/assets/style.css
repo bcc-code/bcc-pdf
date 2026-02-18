@@ -1,0 +1,15 @@
+﻿@page {
+    size: A4;
+    margin: 0cm
+}
+
+body {
+    background: #333333;
+    color: white;
+    margin: 1cm;
+}
+
+img {
+    max-width: 80%;
+    border: 3px dotted green;
+}
