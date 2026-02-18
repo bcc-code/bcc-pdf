@@ -5,6 +5,9 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
+
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type AppError struct {
@@ -62,6 +65,9 @@ func writeHTTPError(ctx context.Context, logger *slog.Logger, w http.ResponseWri
 		"remote_addr", r.RemoteAddr,
 		"cause", err,
 	}
+
+	span := trace.SpanFromContext(ctx)
+	span.SetStatus(codes.Error, err.Error())
 
 	var appErr *AppError
 	if errors.As(err, &appErr) {

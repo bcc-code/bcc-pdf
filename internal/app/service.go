@@ -42,7 +42,7 @@ func NewService(validator TokenValidator, runner PDFRunner, config Config, obs O
 func (s *Service) Routes() http.Handler {
 	mux := http.NewServeMux()
 	s.addRoute(mux, "GET /healthcheck", http.HandlerFunc(s.healthcheck))
-	s.addRoute(mux, "POST /", s.requireAuth(http.HandlerFunc(s.renderPDF)))
+	s.addRoute(mux, "POST /pdf", s.requireAuth(http.HandlerFunc(s.renderPDF)))
 	return mux
 }
 
