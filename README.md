@@ -7,7 +7,7 @@ The service is implemented as a single Go web service that validates JWT bearer 
 ## Usage
 
 See the [documentation](./docs/README.md) for usage.
-See [architecture notes](./docs/architecture.md) for structure.
+See [architecture notes](./architecture.md) for structure.
 
 ## Service Deployment
 

@@ -8,8 +8,6 @@ A web service for generating PDF files from HTML.
 
 The service is implemented as a single Go application that validates JWT bearer tokens and renders PDFs using [WeasyPrint](https://weasyprint.org/) in a `bubblewrap` sandbox.
 
-See [architecture.md](./architecture.md) for system overview.
-
 ## Raw Usage
 
 To generate a PDF make a `multipart/form-data` POST request to the service endpoint: https://api.bcc.no/pdf
