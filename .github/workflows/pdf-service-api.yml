@@ -4,7 +4,7 @@ run-name: Deploy PDF Service - ${{inputs.environment || 'all'}}
 on:
   push:
     branches:
-      - master
+      - main
     paths:
       - "**"
   workflow_dispatch:
