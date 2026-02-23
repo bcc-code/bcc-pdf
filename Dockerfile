@@ -14,6 +14,7 @@ FROM debian:bookworm-slim
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
+    wget \
     ca-certificates \
     bubblewrap \
     python3 \
@@ -32,6 +33,11 @@ RUN apt-get update \
     fonts-linuxlibertine \
     && python3 -m pip install --no-cache-dir --break-system-packages weasyprint \
     && rm -rf /var/lib/apt/lists/*
+
+RUN mkdir -p /usr/share/fonts/truetype/archivo \
+    && wget -qO /usr/share/fonts/truetype/archivo/Archivo-Variable.ttf "https://github.com/google/fonts/raw/main/ofl/archivo/Archivo%5Bwdth%2Cwght%5D.ttf" \
+    && wget -qO /usr/share/fonts/truetype/archivo/Archivo-Italic-Variable.ttf "https://github.com/google/fonts/raw/main/ofl/archivo/Archivo-Italic%5Bwdth%2Cwght%5D.ttf" \
+    && fc-cache -f -v
 
 WORKDIR /app
 COPY --from=builder /out/pdf-service /usr/local/bin/pdf-service

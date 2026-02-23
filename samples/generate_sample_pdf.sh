@@ -5,7 +5,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 OUT_DIR="${ROOT_DIR}/out"
 mkdir -p "${OUT_DIR}"
 
-NEW_URL="${NEW_URL:-http://localhost:8080/}"
+NEW_URL="${NEW_URL:-http://localhost:8080/pdf}"
 NEW_BEARER_TOKEN="${NEW_BEARER_TOKEN:-}"
 
 if [[ -z "${NEW_BEARER_TOKEN}" ]]; then
