@@ -69,8 +69,7 @@ func writeHTTPError(ctx context.Context, logger *slog.Logger, w http.ResponseWri
 	span := trace.SpanFromContext(ctx)
 	span.SetStatus(codes.Error, err.Error())
 
-	var appErr *AppError
-	if errors.As(err, &appErr) {
+	if appErr, ok := errors.AsType[*AppError](err); ok {
 		attributes = append(attributes,
 			"status", appErr.StatusCode,
 			"message", appErr.Message,
